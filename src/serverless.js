@@ -29,6 +29,30 @@ class KubernetesPod extends Component {
     return this.state
   }
 
+  async read(inputs = {}) {
+    const config = {
+      ...defaults,
+      ...inputs
+    }
+
+    const k8sCore = this.getKubernetesClient(kubernetes.CoreV1Api)
+
+    const result = await this.readPod(k8sCore, config)
+    return {
+      metadata: {
+        uid: result.body.metadata.uid,
+        name: result.body.metadata.name,
+        namespace: result.body.metadata.namespace
+      },
+      status: {
+        phase: result.body.status.phase,
+        podIP: result.body.status.podIP,
+        hostIP: result.body.status.hostIP,
+        startTime: result.body.status.startTime
+      }
+    }
+  }
+
   async remove(inputs = {}) {
     const config = {
       ...defaults,
