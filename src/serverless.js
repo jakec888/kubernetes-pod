@@ -53,6 +53,17 @@ class KubernetesPod extends Component {
     }
   }
 
+  async exec(inputs = {}) {
+    const config = {
+      ...defaults,
+      ...inputs
+    }
+
+    const k8sExec = this.getKubernetesClient(kubernetes.Exec)
+
+    return this.execPod(k8sExec, config)
+  }
+
   async remove(inputs = {}) {
     const config = {
       ...defaults,
@@ -92,6 +103,9 @@ class KubernetesPod extends Component {
       ],
       currentContext: 'context'
     })
+    if (type.toString() === kubernetes.Exec.toString()) {
+      return new type(kc)
+    }
     return kc.makeApiClient(type)
   }
 
@@ -104,6 +118,22 @@ class KubernetesPod extends Component {
 
   async readPod(k8s, { name, namespace }) {
     return k8s.readNamespacedPod(name, namespace)
+  }
+
+  async execPod(
+    k8s,
+    {
+      namespace,
+      name,
+      container,
+      command,
+      stdin = process.stdin,
+      stdout = process.stdout,
+      stderr = process.stderr,
+      tty = false
+    }
+  ) {
+    return k8s.exec(namespace, name, container, command, stdout, stderr, stdin, tty)
   }
 
   async deletePod(k8s, { name, namespace }) {
